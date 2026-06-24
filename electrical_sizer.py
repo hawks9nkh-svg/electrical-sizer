@@ -17,8 +17,8 @@ with tab1:
             hvac_kva = st.number_input("HVAC Load (kVA nameplate)", 0.0, 500.0, 0.0)
         else:
             hvac_fla = st.number_input("HVAC FLA", 0.0, 1000.0, 0.0)
-            hvac_voltage = st.selectbox("System Voltage", [480, 208])
-            hvac_kva = (hvac_fla * hvac_voltage * 1.732) / 1000 if hvac_voltage == 480 else (hvac_fla * hvac_voltage * 1.732) / 1000 * 0.577
+            hvac_voltage = st.selectbox("HVAC Voltage", [480, 208])
+            hvac_kva = (hvac_fla * hvac_voltage * 1.732) / 1000
         kitchen_kva = st.number_input("Kitchen / Special Appliance Load (kVA nameplate)", 0.0, 500.0, 80.0 if occupancy == "Restaurant" else 0.0)
     with col2:
         st.header("Demand Factors")
@@ -29,7 +29,12 @@ with tab1:
 with tab2:
     st.header("Emergency Loads")
     life_safety_kva = st.number_input("Life Safety (kVA)", 0.0, 500.0, 10.0)
-    elevator_fla = st.number_input("Elevators Total FLA", 0.0, 1000.0, 0.0)
+    elev_type = st.radio("Elevators Input Type", ["kVA", "FLA"])
+    if elev_type == "kVA":
+        elevator_kva = st.number_input("Elevators (kVA)", 0.0, 500.0, 0.0)
+    else:
+        elevator_fla = st.number_input("Elevators FLA", 0.0, 1000.0, 0.0)
+        elevator_kva = (elevator_fla * 480 * 1.732) / 1000
     standby_kva = st.number_input("Standby Loads (kVA)", 0.0, 500.0, 20.0)
 
 # Calculations
@@ -42,8 +47,6 @@ kitchen_demand_kva = kitchen_kva * kitchen_demand_factor
 hvac_demand_kva = hvac_kva * hvac_demand_factor if 'hvac_kva' in locals() else 0
 total_normal_kva = demand_general_kva + kitchen_demand_kva + hvac_demand_kva
 
-# Emergency
-elevator_kva = (elevator_fla * 480 * 1.732) / 1000 if elevator_fla > 0 else 0
 total_emergency_kva = life_safety_kva + elevator_kva + standby_kva
 
 grand_total_kva = total_normal_kva + total_emergency_kva
@@ -59,7 +62,7 @@ with col2:
     st.metric("Recommended Service (480V example)", f"{recommended_service} A")
     st.metric("Emergency Generator (rough)", f"{int(total_emergency_kva * 1.3):.0f} kW")
 
-st.info("HVAC input type selectable. Emergency has separate inputs. Verify with full NEC.")
+st.info("HVAC and Elevators have kVA/FLA toggle. Verify with full NEC.")
 
 if st.button("Show Breakdown"):
     st.dataframe(pd.DataFrame({
