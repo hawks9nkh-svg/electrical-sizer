@@ -25,9 +25,9 @@ kitchen_demand_kva = kitchen_kva * kitchen_demand_factor
 hvac_demand_kva = hvac_kva * hvac_demand_factor
 total_demand_kva = demand_general_kva + kitchen_demand_kva + hvac_demand_kva
 
-# Service amps with better rounding
+# Service amps rounded to nearest 50A, min 100A
 service_amps = (total_demand_kva * 1000 / (480 * 1.732)) * 1.25 * (1 + spare_pct/100)
-recommended_service = max(100, round(service_amps / 100) * 100)  # minimum 100A, round to nearest 100
+recommended_service = max(100, round(service_amps / 50) * 50)
 
 st.header("Results")
 col1, col2 = st.columns(2)
