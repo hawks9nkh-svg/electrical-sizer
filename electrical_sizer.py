@@ -25,6 +25,10 @@ kitchen_demand_kva = kitchen_kva * kitchen_demand_factor
 hvac_demand_kva = hvac_kva * hvac_demand_factor
 total_demand_kva = demand_general_kva + kitchen_demand_kva + hvac_demand_kva
 
+# Service amps with better rounding
+service_amps = (total_demand_kva * 1000 / (480 * 1.732)) * 1.25 * (1 + spare_pct/100)
+recommended_service = max(100, round(service_amps / 100) * 100)  # minimum 100A, round to nearest 100
+
 st.header("Results")
 col1, col2 = st.columns(2)
 with col1:
@@ -33,8 +37,7 @@ with col1:
     st.metric("HVAC Demand kVA", f"{hvac_demand_kva:.1f} kVA")
     st.metric("**Total Demand kVA**", f"{total_demand_kva:.1f}")
 with col2:
-    service_amps = (total_demand_kva * 1000 / (480 * 1.732)) * 1.25 * (1 + spare_pct/100)
-    st.metric("Recommended Service (480V example)", f"{int(service_amps/100)*100} A")
+    st.metric("Recommended Service (480V example)", f"{recommended_service} A")
     emerg_kva = total_demand_kva * 0.2
     st.metric("Emergency Generator (rough)", f"{int(emerg_kva * 1.3):.0f} kW")
 
