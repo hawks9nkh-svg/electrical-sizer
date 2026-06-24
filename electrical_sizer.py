@@ -7,8 +7,12 @@ st.title("🏗️ Electrical Power System Sizer (NEC-Inspired)")
 st.sidebar.header("Building Inputs")
 occupancy = st.sidebar.selectbox("Occupancy Type", ["Office", "Retail", "Restaurant", "Hospital", "School", "Warehouse", "Hotel"])
 sqft = st.sidebar.number_input("Gross Square Footage", 1000, 500000, 25000)
-hvac_kva = st.sidebar.number_input("HVAC Load (kVA nameplate) - optional", 0.0, 500.0, 0.0)
+hvac_kva = st.sidebar.number_input("HVAC Load (kVA nameplate)", 0.0, 500.0, 0.0)
 kitchen_kva = st.sidebar.number_input("Kitchen / Special Appliance Load (kVA nameplate)", 0.0, 500.0, 80.0 if occupancy == "Restaurant" else 0.0)
+
+st.sidebar.header("Demand Factors (editable)")
+kitchen_demand_factor = st.sidebar.number_input("Kitchen Demand Factor", 0.5, 1.0, 0.75, step=0.05)
+hvac_demand_factor = st.sidebar.number_input("HVAC Demand Factor (continuous)", 1.0, 1.5, 1.25, step=0.05)
 spare_pct = st.sidebar.slider("Spare Capacity %", 0, 50, 25)
 
 # Calculations
@@ -17,8 +21,8 @@ lighting_va = sqft * lighting_va_per_sqft.get(occupancy, 3.0)
 general_va = sqft * 1.0
 demand_general_kva = (lighting_va + general_va) * 0.8 / 1000
 
-kitchen_demand_kva = kitchen_kva * 0.75
-hvac_demand_kva = hvac_kva * 1.25
+kitchen_demand_kva = kitchen_kva * kitchen_demand_factor
+hvac_demand_kva = hvac_kva * hvac_demand_factor
 total_demand_kva = demand_general_kva + kitchen_demand_kva + hvac_demand_kva
 
 st.header("Results")
@@ -34,7 +38,7 @@ with col2:
     emerg_kva = total_demand_kva * 0.2
     st.metric("Emergency Generator (rough)", f"{int(emerg_kva * 1.3):.0f} kW")
 
-st.info("Restaurant kitchen load included with demand factor. HVAC optional for concept phase. Always verify with full NEC calculations.")
+st.info("Demand factors are editable on the left. Restaurant kitchen load included. Always verify with full NEC calculations.")
 
 if st.button("Show Load Breakdown"):
     st.dataframe(pd.DataFrame({
