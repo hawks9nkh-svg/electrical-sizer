@@ -125,5 +125,54 @@ with col3:
     if st.button("Reset All Tables"): st.rerun()
 
 st.success("✅ v2.9 is now running with the new dedicated **Transformer & Feeder Sizing** tab. Everything is complete and ready.")
+# === v2.10 ADDITION - PASTE AT THE VERY END OF YOUR FILE ===
 
+st.divider()
+st.subheader("🔥 v2.10 Added: Non-Coincident Loads (Heating vs Cooling)")
+
+# New inputs for non-coincident HVAC
+st.subheader("Non-Coincident HVAC Loads (Heating & Cooling)")
+col_h1, col_h2 = st.columns(2)
+with col_h1:
+    cooling_kva = st.number_input("❄️ Cooling / AC Total kVA", 0.0, 3000.0, 65.0, key="cool")
+with col_h2:
+    heating_kva = st.number_input("🔥 Heating / Heat Pump Total kVA", 0.0, 3000.0, 25.0, key="heat")
+
+# Automatic non-coincident logic
+non_coincident_hvac = max(cooling_kva, heating_kva)
+st.success(f"✅ Using **{non_coincident_hvac} kVA** (the larger of Heating or Cooling) per NEC 220.60 Non-Coincident Loads")
+
+# Update the main Normal calculation with this new value
+# (This adds the value to the existing Normal tab total)
+if "extra_normal" not in st.session_state:
+    st.session_state.extra_normal = 0.0
+
+if st.button("Apply Non-Coincident HVAC to Normal Loads Total"):
+    st.session_state.extra_normal += non_coincident_hvac
+    st.success(f"✅ Added {non_coincident_hvac} kVA (larger of heat/cool) to Normal Loads total")
+    st.rerun()
+
+# Optional: Show both values for transparency
+st.info(f"""
+Cooling entered: {cooling_kva} kVA  
+Heating entered: {heating_kva} kVA  
+→ **Using only the larger value** = {non_coincident_hvac} kVA (Non-coincident rule applied)
+""")
+
+# Quick buttons for common scenarios
+col_a, col_b = st.columns(2)
+with col_a:
+    if st.button("Set Typical Office (Cooling Dominant)"):
+        st.session_state.cool = 120.0
+        st.session_state.heat = 30.0
+        st.rerun()
+with col_b:
+    if st.button("Set Typical Winter (Heating Dominant)"):
+        st.session_state.cool = 45.0
+        st.session_state.heat = 95.0
+        st.rerun()
+
+st.caption("This feature is now active. You can keep entering both heating and cooling — the app will always use only the bigger one.")
+
+st.success("✅ Non-coincident HVAC logic successfully added! Test it by changing the cooling and heating values and clicking the button.")
 st.caption("Just tell me what to add or change next and I will give you the full code again (or incremental if you prefer).")
